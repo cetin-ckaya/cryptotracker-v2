@@ -5,6 +5,8 @@ import com.cryptotracker.backend.application.dto.request.CreateUserRequest;
 import com.cryptotracker.backend.application.dto.request.LoginRequest;
 import com.cryptotracker.backend.application.dto.response.AuthResponse;
 import com.cryptotracker.backend.application.dto.response.UserResponse;
+import com.cryptotracker.backend.application.exception.BusinessException;
+import com.cryptotracker.backend.application.exception.NotFoundException;
 import com.cryptotracker.backend.domain.model.Portfolio;
 import com.cryptotracker.backend.domain.model.User;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioRepository;
@@ -36,7 +38,7 @@ public class UserService {
         // Aynı email ile kayıt varsa hata fırlat (DB'de unique constraint var ama
         // önceden kontrol etmek daha anlamlı bir hata mesajı üretir).
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use: " + request.getEmail());
+            throw new BusinessException("Email already in use: " + request.getEmail());
         }
 
         // Şifreyi asla düz metin saklama — BCrypt ile hash'le.
@@ -57,13 +59,11 @@ public class UserService {
     public AuthResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new NotFoundException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new NotFoundException("Invalid credentials");
         }
-
-        jwtTokenProvider.generateToken(user.getEmail());
 
         String token = jwtTokenProvider.generateToken(user.getEmail());
         return new AuthResponse(token);
