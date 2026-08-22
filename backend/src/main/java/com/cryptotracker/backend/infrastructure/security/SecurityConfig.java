@@ -2,26 +2,47 @@ package com.cryptotracker.backend.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-// GEÇİCİ — Gün 20-23'te JWT ile değiştirilecek.
-// Şimdilik tüm endpoint'lere izin veriyoruz ki Postman'de test edebilelim.
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF: tarayıcı tabanlı saldırılara karşı koruma.
-                // REST API'lerde JWT kullandığımız için CSRF'e gerek yok — kapatıyoruz.
                 .csrf(AbstractHttpConfigurer::disable)
-                // Şimdilik tüm isteklere izin ver — JWT gelince burayı kısıtlayacağız.
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                // JWT kullandığımız için session tutmuyoruz — her istek kendi token'ını taşır.
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Auth endpoint'leri herkese açık — token olmadan erişilebilir.
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        // Diğer her endpoint token zorunlu.
+                        .anyRequest().authenticated()
+                )
+                // JWT filter'ı, Spring'in kendi UsernamePasswordAuthenticationFilter'ından ÖNCE çalıştır.
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // BCrypt bean — UserService'te şifre hash'lemek için inject edilecek.
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

@@ -3,7 +3,6 @@ package com.cryptotracker.backend.domain.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -53,7 +52,7 @@ public abstract class BaseEntity {
     // bu alan otomatik olarak "şu anki zaman" ile güncellenir.
     // Elle "updatedAt = LocalDateTime.now()" yazmana gerek kalmaz.
     @LastModifiedDate
-    @Column(name = "update_at")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
 
