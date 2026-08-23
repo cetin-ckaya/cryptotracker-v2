@@ -13,6 +13,7 @@ Kapsam kararları için her zaman `docs/decisions.md`'yi, ilerleme için `docs/p
 **AI:** Önce OpenAI API (Phase 2), sonra kendi ML modeli (Phase 5)
 **Toplam plan:** ~150 gün (`AI Destekli_plan1.pdf` — kullanıcının Downloads klasöründe)
 **Stack:** Java 21 / Spring Boot 4.1 / Maven / PostgreSQL / Flyway / React 18+ (Phase 3)
+**Port:** Uygulama `8081`'de çalışıyor (8080 başka bir process tarafından kullanılıyor)
 
 ---
 
@@ -23,7 +24,7 @@ Kullanıcı uygulama kodunu **kendisi yazar** — öğrenmek için yapıyor.
 
 ### Claude'un yapacakları:
 - Oturum başında `docs/progress.md` + git log'a bakarak "bugün ne yapılacak" sorusunu cevaplar
-- Sprint görevlerini roadmap PDF'e ve `docs/decisions.md`'deki kapsam kararlarına göre adapte eder
+- Sprint görevlerini `AI Destekli_plan1.pdf` roadmap'e ve `docs/decisions.md`'deki kapsam kararlarına göre adapte eder
 - Kodu review eder, hataları gösterir, düzeltme yapılacaksa kullanıcıya bırakır
 - Kapsam/mimari kararlar gerektirinde kullanıcıya sorar, cevabı `docs/decisions.md`'ye kaydeder
 - Her sprint bitiminde `docs/progress.md`'yi günceller
@@ -47,34 +48,28 @@ Görevin projemizin hangi katmanına, hangi kullanıcı hikayesine denk düştü
 ```java
 // Yanlış — entity direkt API'de kullanılırsa
 {
-  "passwordHash": "$2a$10$..."  // güvenlik açığı
+  "passwordHash": "$2a$10$..."  // guvenlik acigi
 }
 
-// Doğru — DTO ile
+// Dogru — DTO ile
 {
   "email": "user@mail.com",
-  "fullName": "Çetin"           // sadece gerekli alanlar
+  "fullName": "Cetin"           // sadece gerekli alanlar
 }
 ```
 
 ### 3. İlk Kodu Claude Verir (Yorum Satırlı)
 Görevdeki ilk/örnek sınıfı Claude yazar — her anotasyonun, her satırın neden orada olduğunu
-açıklayan yorum satırlarıyla:
-
-```java
-// @NotBlank: null, "" veya "   " olamaz — kullanıcı bu alanı göndermek ZORUNDA
-// @Email: geçerli email formatı zorunlu (@ işareti, domain vs.)
-@NotBlank(message = "Email cannot be blank")
-@Email(message = "Invalid email format")
-private String email;
-```
+açıklayan yorum satırlarıyla. Tüm kodlarda yorum satırları zorunludur — ne işe yaradığını
+bu projede açıklamalı.
 
 ### 4. Geri Kalanı Kullanıcı Yazar
-Claude "şimdi sıra sende" diyerek benzer sınıfları kullanıcıya bırakır.
+Claude sadece ne yapılacağını ayrıntılı açıklar — ipucu veya kod vermez.
+Kullanıcı "yardım et" derse o zaman ipucu/kod verilir.
 
 ### 5. Review
 Kullanıcı "yazdım" dediğinde Claude **dosyaları doğrudan okur** (kullanıcı kodu paylaşmak zorunda değil),
-bulguları maddeler halinde yazar: ✅ doğru olanlar, ❌ eksik/hatalı olanlar.
+bulguları maddeler halinde yazar: doğru olanlar, eksik/hatalı olanlar.
 
 ---
 
@@ -83,14 +78,14 @@ bulguları maddeler halinde yazar: ✅ doğru olanlar, ❌ eksik/hatalı olanlar
 ```
 backend/src/main/java/com/cryptotracker/backend/
 ├── domain/
-│   └── model/              ← JPA Entity sınıfları (DB tablolarını temsil eder)
+│   └── model/              <- JPA Entity siniflari (DB tablolarini temsil eder)
 │       ├── BaseEntity.java         (@MappedSuperclass — id, createdAt, updatedAt)
 │       ├── User.java
 │       ├── Coin.java
-│       ├── Portfolio.java          (OneToOne → User)
-│       ├── Holding.java            (ManyToOne → Portfolio, Coin)
-│       ├── Transaction.java        (ManyToOne → Portfolio, Coin)
-│       ├── Subscription.java       (OneToOne → User)
+│       ├── Portfolio.java          (OneToOne -> User, OneToMany -> Holdings EAGER)
+│       ├── Holding.java            (ManyToOne -> Portfolio, Coin)
+│       ├── Transaction.java        (ManyToOne -> Portfolio, Coin)
+│       ├── Subscription.java       (OneToOne -> User)
 │       ├── PriceHistory.java
 │       ├── PortfolioValueHistory.java
 │       ├── AiAnalysisLog.java
@@ -98,17 +93,38 @@ backend/src/main/java/com/cryptotracker/backend/
 │       ├── TransactionType.java    (enum: BUY, SELL, HOLD)
 │       └── SubscriptionTier.java   (enum: FREE, PREMIUM)
 ├── application/
-│   └── dto/                ← Veri transfer nesneleri (API katmanı)
-│       ├── request/        ← Kullanıcıdan gelen istekler (validation anotasyonları burada)
-│       └── response/       ← Kullanıcıya dönen yanıtlar (validation anotasyonu yok)
-│   └── mapper/             ← MapStruct mapper interface'leri (Entity ↔ DTO)
+│   ├── dto/                <- Veri transfer nesneleri (API katmani)
+│   │   ├── request/        <- Kullanicidan gelen istekler (validation anotasyonlari burada)
+│   │   └── response/       <- Kullaniciya donen yanitlar (validation anotasyonu yok)
+│   ├── mapper/             <- MapStruct mapper interface'leri (Entity <-> DTO)
+│   │   └── PortfolioMapper.java  (Holding, Transaction, Portfolio mapping)
+│   ├── service/            <- Is mantiginin yasadigi yer
+│   │   ├── UserService.java       (register, login — BCrypt + JWT)
+│   │   ├── PortfolioService.java  (getPortfolio, addHolding, removeHolding + CoinGecko)
+│   │   └── TransactionService.java (addTransaction, getTransaction)
+│   └── exception/
+│       ├── BusinessException.java   (409 Conflict)
+│       └── NotFoundException.java   (404 Not Found)
 ├── infrastructure/
-│   └── persistence/        ← JpaRepository interface'leri
-└── presentation/           ← Controller'lar (Sprint 2'de oluşturulacak)
+│   ├── persistence/        <- JpaRepository interface'leri
+│   ├── security/           <- JWT filter, SecurityConfig
+│   │   ├── JwtTokenProvider.java
+│   │   ├── JwtAuthenticationFilter.java
+│   │   └── SecurityConfig.java
+│   └── external/
+│       └── CoinGeckoService.java   (RestClient ile canli fiyat cekimi)
+└── presentation/
+    ├── controller/
+    │   ├── AuthController.java        (POST /api/v1/auth/register, /login)
+    │   ├── PortfolioController.java   (GET/POST/DELETE /api/v1/portfolio/*)
+    │   └── TransactionController.java (GET/POST /api/v1/transactions)
+    └── exception/
+        ├── GlobalExceptionHandler.java  (@RestControllerAdvice)
+        └── ErrorResponse.java
 ```
 
-**Katman Kuralı:** Bağımlılık yönü her zaman dıştan içe akar:
-`presentation → application → domain` — domain katmanı hiçbir dış katmanı import etmez.
+**Katman Kuralı:** Bagimlilik yonu her zaman distan ice akar:
+`presentation → application → domain` — domain katmani hicbir dis katmani import etmez.
 
 ---
 
@@ -121,7 +137,8 @@ backend/src/main/java/com/cryptotracker/backend/
   - Çoka-bir: `@ManyToOne` + `@JoinColumn(nullable = false)`
 - Enum alanlar: `@Enumerated(EnumType.STRING)` — integer değil string olarak sakla
 - Lombok: `@Getter` `@Setter` (entity başına) — getter/setter elle yazılmaz
-- `BaseEntity`'de yanlış import var (`org.springframework.cglib.core.Local`) — Sprint 2 öncesi temizlenecek
+- `Portfolio.holdings` alanı `FetchType.EAGER` kullanır — lazy loading N+1 sorununu önler
+- `PortfolioRepository.findByUserIdWithHoldings` — `LEFT JOIN FETCH` ile holdings'i tek sorguda çeker
 
 ---
 
@@ -152,41 +169,57 @@ backend/src/main/java/com/cryptotracker/backend/
 
 ---
 
+## Güvenlik — Önemli Kurallar
+
+- `application.properties` ve `pom.xml` dosyalarında **Turkce karakter kullanma** — Maven resource
+  filtering sirasinda `MalformedInputException` hatasina neden olur
+- JWT token `Authorization: Bearer <token>` header'i ile gönderilir
+- `SecurityConfig`: `/api/v1/auth/**` herkese acik, diger her sey authenticated
+- Authenticated userId çekme: `SecurityContextHolder` → email → `UserRepository.findByEmail`
+- `PortfolioController` ve `TransactionController`'da `getAuthenticatedUserId()` private metodu kullanılır
+
+---
+
 ## Tamamlanmış Sprint'ler (Referans)
 
 ### Sprint 1 — Temel Yapı & Veritabanı (Gün 4-15) ✅
 
-**Gün 4-6 — Clean Architecture & Paket Yapısı**
-- `domain`, `application`, `infrastructure`, `presentation` paketleri oluşturuldu
-- `BaseEntity` (id, createdAt, updatedAt — JPA Auditing ile)
+- `domain`, `application`, `infrastructure`, `presentation` paket yapısı
+- `BaseEntity` (JPA Auditing ile id, createdAt, updatedAt)
+- Tüm JPA entity'ler + `V1__init.sql` Flyway migration
+- Tüm Repository interface'leri + özel query metodları
+- Request/Response DTO'lar, MapStruct mapper'lar, Bean Validation
 
-**Gün 7-9 — JPA Entity & Flyway**
-- Tüm entity'ler kodlandı (User, Coin, Portfolio, Holding, Transaction, Subscription, PriceHistory,
-  PortfolioValueHistory, AiAnalysisLog, UserBehaviorEvent)
-- `V1__init.sql` Flyway migration dosyası oluşturuldu
+### Sprint 2 — API & Güvenlik (Gün 16-26) ✅
 
-**Gün 10-12 — Repository & Data Access**
-- Tüm entity'ler için `JpaRepository` interface'leri oluşturuldu
-- `PortfolioRepository.findByUserId`, `TransactionRepository.findByPortfolioIdOrderByTransactionDateDesc`
-  gibi özel query metodları eklendi
-- `Pageable` desteği: transaction listesi endpoint'i yazılırken eklenecek (Sprint 2/3)
+- `AuthController` (register/login), `PortfolioController` (stub) — Postman testleri geçti
+- Spring Security + JWT: `JwtTokenProvider`, `JwtAuthenticationFilter`, `SecurityConfig`, `UserService`
+- Global Exception Handling: `GlobalExceptionHandler`, `BusinessException`, `NotFoundException`, `ErrorResponse`
+- 400 / 404 / 409 / 500 hata senaryoları test edildi
 
-**Gün 13-15 — DTO, MapStruct & Validation**
-- Request DTO'lar: `CreateUserRequest`, `LoginRequest`, `AddHoldingRequest`, `CreateTransactionRequest`
-- Response DTO'lar: `UserResponse`, `HoldingResponse`, `PortfolioResponse`, `TransactionResponse`
-- Mapper'lar: `UserMapper`, `PortfolioMapper` (Holding + Transaction + Portfolio mapping)
-- `mvn compile` — hatasız
+### Sprint 3 — Service Layer (Gün 27-35) ✅
+
+- `PortfolioService`: getPortfolio (CoinGecko fiyat entegrasyonu + kar/zarar hesabı), addHolding, removeHolding
+- `CoinGeckoService`: `RestClient` ile BTC/ETH/SOL anlık fiyat çekimi
+- `PortfolioRepository.findByUserIdWithHoldings`: `LEFT JOIN FETCH` ile boş liste sorunu çözüldü
+- `TransactionService`: addTransaction, getTransaction
+- `TransactionController`: POST/GET `/api/v1/transactions`
+- Tüm endpoint'ler Postman'de test edildi
 
 ---
 
 ## Sıradaki Sprint
 
-**Sprint 2 — API & Güvenlik (Gün 16-26)**
+**Sprint 4 — Cache, Zamanlama & Real-Time (Gün 34-42)**
 
-- **Gün 16-19:** REST Controller'lar (`UserController`, `PortfolioController`) — boş servis çağrılarıyla,
-  Postman'de test
-- **Gün 20-23:** Spring Security & JWT (`SecurityConfig`, `JwtTokenProvider`, BCrypt)
-- **Gün 24-26:** Global Exception Handling (`@ControllerAdvice`, `BusinessException`, `NotFoundException`)
+- **Gün 34-36:** Redis Cache — Docker'da Redis, `@Cacheable` ile CoinGecko fiyat önbellekleme,
+  fiyat değiştiğinde `@CacheEvict`
+- **Gün 37-39:** Scheduled Tasks — `@EnableScheduling`, `MarketScheduler` (5 dk'da bir fiyat güncelle),
+  saatlik portföy geçmişi kaydı
+- **Gün 40-42:** WebSocket & Real-Time — `WebSocketConfig`, `/topic/prices` kanalı, Postman WS testi
+
+> Not: Plan'daki Gün 43-44 Alarm Sistemi adımı D002 kararı gereği atlanacak.
+> Gün 45-47 Swagger + Actuator ile devam edilecek.
 
 ---
 
@@ -195,7 +228,7 @@ backend/src/main/java/com/cryptotracker/backend/
 | Karar | Açıklama |
 |---|---|
 | D001 | Tek portföy modeli — `Portfolio.user_id UNIQUE` ile DB'de garantili |
-| D002 | Alarm sistemi kapsam dışı (v2.1'e ertelendi) |
+| D002 | Alarm sistemi kapsam dışı (v2.1'e ertelendi) — plan'da Gün 43-44'te var, atlanacak |
 | D003 | FREE: BTC/ETH/SOL için genel AL/SAT/TUT — PREMIUM: portföydeki her coin kişiselleştirilmiş |
 | D004 | Tüm AI çıktılarına "Yatırım tavsiyesi değildir" uyarısı |
 | D005 | Rate limiting yok — premium gating sadece AI Analiz sayfasına erişim üzerinden |

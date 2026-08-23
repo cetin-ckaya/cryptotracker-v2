@@ -19,10 +19,12 @@ public interface PortfolioMapper {
     @Mapping(source = "coin.id", target = "coinId")
     HoldingResponse toHoldingResponse(Holding holding);
 
+
     //PortfolioResponse toPortfolioResponse(Portfolio portfolio) →
     // totalValue, totalInvested, totalProfitLoss, totalProfitLossPercentage alanları entity'de yok
     PortfolioResponse toPortfolioResponse(Portfolio portfolio);
 
     @Mapping(source = "coin.symbol", target = "coinSymbol")
+    @Mapping(source = "coin.id", target = "coinId")
     TransactionResponse toResponse(Transaction transaction);
 }

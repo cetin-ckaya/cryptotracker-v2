@@ -3,30 +3,31 @@
 Roadmap kaynağı: `AI Destekli_plan1.pdf` (~150 günlük plan), kapsam sapmaları için bkz. `decisions.md`.
 Bu dosya, aktif olarak neredeyiz sorusuna hızlı cevap vermek için oturum sonlarında güncellenir.
 
-## Durum Özeti (2026-08-20)
+## Durum Özeti (2026-08-23)
 
 **Faz:** Phase 1 — Monolitik Backend Geliştirme
-**Sprint:** Sprint 1 — Temel Yapı & Veritabanı (Gün 4-15)
-**Şu an:** Gün 13-15 (DTO, MapStruct & Validation) — bitmek üzere, commit edilmedi
+**Sprint:** Sprint 4 — Cache, Zamanlama & Real-Time (Gün 34-42)
+**Şu an:** Gün 34 başlangıcı
 
 ### Tamamlanan
 - [x] Gün 1-3 (Phase 0): requirements.md, decisions.md, ER diyagramı, repo + ilk commit
 - [x] Gün 4-6: domain/application/infrastructure paket yapısı, BaseEntity
 - [x] Gün 7-9: Tüm JPA entity'ler + Flyway V1__init.sql
 - [x] Gün 10-12: Tüm Repository interface'leri (temel query'ler)
-- [~] Gün 13-15: CreateUserRequest/LoginRequest/AddHoldingRequest DTO + validation yazıldı,
-      UserMapper (MapStruct) yazıldı. **Henüz commit edilmedi** (pom.xml + application/ paketi untracked).
+- [x] Gün 13-15: DTO'lar (Request/Response), MapStruct mapper'lar, Bean Validation
+- [x] Gün 16-19: REST Controller'lar (AuthController, PortfolioController) + stub service'ler — Postman testleri geçti
+- [x] Gün 20-23: Spring Security + JWT (JwtTokenProvider, JwtAuthenticationFilter, SecurityConfig, UserService.login/register) — tüm auth testleri geçti
+- [x] Gün 24-26: Global Exception Handling (GlobalExceptionHandler, BusinessException, NotFoundException, ErrorResponse) — 400/404/409/500 testleri geçti
 
-### Bilinen küçük eksikler (bloklayıcı değil, ileride tamamlanacak)
-- TransactionRepository henüz `Pageable` kullanmıyor (plan Gün 10-12'de isteniyordu) — Sprint 2/3'te
-  transaction listeleme endpoint'i yazılırken eklenebilir.
-- Portföy toplam değerini hesaplayan özel `@Query` henüz yok — Sprint 3 (Service Layer, Gün 27-30)
-  kapsamında zaten yazılacak, şimdiden eklemeye gerek yok.
-- `UserResponse.java` içinde kullanılmayan/yanlış import var (`org.springframework.cglib.core.Local`,
-  kullanılmayan `LocalDate`) — commit öncesi temizlenmeli.
+- [x] Gün 27-35: PortfolioService gerçek implementasyonu (holding ekle/çıkar, kar/zarar hesabı) + CoinGecko fiyat entegrasyonu
+- [x] Gün 35 (ek): TransactionService + TransactionController — POST/GET /api/v1/transactions, Postman testleri geçti
 
 ### Sıradaki adım
-Sprint 2: API & Güvenlik (Gün 16-26) → Gün 16-19 REST Controller'lar.
+Sprint 4: Cache, Zamanlama & Real-Time (Gün 34-42)
+- Gün 34-36: Redis Cache — Docker Redis, @Cacheable CoinGecko fiyatlari, @CacheEvict
+- Gün 37-39: Scheduled Tasks — @EnableScheduling, MarketScheduler (5 dk fiyat), saatlik portfoy gecmisi
+- Gün 40-42: WebSocket & Real-Time — WebSocketConfig, /topic/prices kanali
+> Not: Gün 43-44 Alarm Sistemi D002 karari geregi atlanacak. Gün 45-47 Swagger + Actuator ile devam.
 
 ## Kapsam Notları (docs/decisions.md ile senkron)
 - Tek portföy modeli (D001) — DB seviyesinde `Portfolio.user_id UNIQUE` ile zaten uygulanmış.
