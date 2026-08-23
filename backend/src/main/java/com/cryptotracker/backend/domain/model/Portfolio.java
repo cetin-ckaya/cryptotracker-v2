@@ -1,11 +1,10 @@
 package com.cryptotracker.backend.domain.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "portfolios")
@@ -19,4 +18,7 @@ public class Portfolio extends BaseEntity{
     @OneToOne
     @JoinColumn(name = "user_id",unique = true,nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "portfolio", fetch = FetchType.EAGER)
+    private List<Holding> holdings;
 }
