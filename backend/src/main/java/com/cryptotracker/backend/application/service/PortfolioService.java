@@ -8,6 +8,7 @@ import com.cryptotracker.backend.application.exception.NotFoundException;
 import com.cryptotracker.backend.domain.model.Coin;
 import com.cryptotracker.backend.domain.model.Holding;
 import com.cryptotracker.backend.domain.model.Portfolio;
+import com.cryptotracker.backend.infrastructure.external.CoinGeckoService;
 import com.cryptotracker.backend.infrastructure.persistence.CoinRepository;
 import com.cryptotracker.backend.infrastructure.persistence.HoldingRepository;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioRepository;
@@ -15,6 +16,7 @@ import com.cryptotracker.backend.infrastructure.persistence.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class PortfolioService {
@@ -24,13 +26,15 @@ public class PortfolioService {
     private final CoinRepository coinRepository;
     private final UserRepository userRepository;
     private final PortfolioMapper portfolioMapper;
+    private final CoinGeckoService coinGeckoService;
 
-    public PortfolioService(PortfolioRepository portfolioRepository, HoldingRepository holdingRepository, CoinRepository coinRepository, UserRepository userRepository, PortfolioMapper portfolioMapper) {
+    public PortfolioService(PortfolioRepository portfolioRepository, HoldingRepository holdingRepository, CoinRepository coinRepository, UserRepository userRepository, PortfolioMapper portfolioMapper, CoinGeckoService coinGeckoService) {
         this.portfolioRepository = portfolioRepository;
         this.holdingRepository = holdingRepository;
         this.coinRepository = coinRepository;
         this.userRepository = userRepository;
         this.portfolioMapper = portfolioMapper;
+        this.coinGeckoService = coinGeckoService;
     }
 
 
@@ -42,11 +46,28 @@ public class PortfolioService {
         // MapStruct ile DTO'ya çevir
         PortfolioResponse response = portfolioMapper.toPortfolioResponse(portfolio);
 
-        // Kar/zarar hesabı Phase 2'de (fiyat API'si gelince) yapılacak — şimdilik sıfır
-        response.setTotalValue(BigDecimal.ZERO);
-        response.setTotalInvested(BigDecimal.ZERO);
-        response.setTotalProfitLoss(BigDecimal.ZERO);
-        response.setTotalProfitLossPercentage(BigDecimal.ZERO);
+        // Her holding için: anlık fiyat × miktar = güncel değer
+        BigDecimal totalValue = BigDecimal.ZERO;
+        BigDecimal totalInvested = BigDecimal.ZERO;
+
+        for(Holding holding : portfolio.getHoldings()){
+            BigDecimal currentPrice = coinGeckoService.getPrice(holding.getCoin().getSymbol());
+            BigDecimal currentValue = currentPrice.multiply(holding.getQuantity());
+            BigDecimal invested = holding.getAverageBuyPrice().multiply(holding.getQuantity());
+
+
+            totalValue = totalValue.add(currentValue);
+            totalInvested = totalInvested.add(invested);
+        }
+        BigDecimal profitLoss = totalValue.subtract(totalInvested);
+        BigDecimal profitLossPercentage = totalInvested.compareTo(BigDecimal.ZERO) == 0
+                ? BigDecimal.ZERO
+                : profitLoss.divide(totalInvested, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+
+        response.setTotalValue(totalValue);
+        response.setTotalInvested(totalInvested);
+        response.setTotalProfitLoss(profitLoss);
+        response.setTotalProfitLossPercentage(profitLossPercentage);
 
         return response;
     }
