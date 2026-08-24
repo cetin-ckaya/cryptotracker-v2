@@ -2,6 +2,7 @@ package com.cryptotracker.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
@@ -9,6 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 // Bu olmadan @CreatedDate/@LastModifiedDate anotasyonları TAMAMEN
 // göz ardı edilir, alanlar hep null kalır.
 @EnableJpaAuditing
+//Spring'e "cache mekanizmasını aktif et" demek için ana sınıfa bu anotasyon eklenir
+@EnableCaching
 public class BackendApplication {
 
     public static void main(String[] args) {
