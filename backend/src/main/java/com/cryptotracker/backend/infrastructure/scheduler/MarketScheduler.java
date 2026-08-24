@@ -7,6 +7,7 @@ import com.cryptotracker.backend.infrastructure.persistence.PortfolioRepository;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioValueHistoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +23,14 @@ public class MarketScheduler {
     private final CoinRepository coinRepository;
     private final PortfolioRepository portfolioRepository;
     private final PortfolioValueHistoryRepository portfolioValueHistoryRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public MarketScheduler(CoinGeckoService coinGeckoService,CoinRepository coinRepository, PortfolioRepository portfolioRepository, PortfolioValueHistoryRepository portfolioValueHistoryRepository) {
+    public MarketScheduler(CoinGeckoService coinGeckoService, CoinRepository coinRepository, PortfolioRepository portfolioRepository, PortfolioValueHistoryRepository portfolioValueHistoryRepository, SimpMessagingTemplate messagingTemplate) {
         this.coinGeckoService = coinGeckoService;
         this.coinRepository = coinRepository;
         this.portfolioRepository = portfolioRepository;
         this.portfolioValueHistoryRepository = portfolioValueHistoryRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // Her 5 dakikada bir calisir — Redis cache'i temizleyip tum coinlerin fiyatini yeniden ceker
@@ -36,6 +39,8 @@ public class MarketScheduler {
     public void refreshPrice(){
         log.info("Scheduled price refresh started");
 
+
+
         // Cache'i temizle — bir sonraki getPrice() cagrisi gercek HTTP istegi yapacak
         coinGeckoService.evictPriceCache();
 
@@ -43,6 +48,9 @@ public class MarketScheduler {
         coinRepository.findAll().forEach(coin -> {
             coinGeckoService.getPrice(coin.getSymbol());
             log.info("Price refreshed for: {}", coin.getSymbol());
+
+            messagingTemplate.convertAndSend("/topic/prices",
+                    coin.getSymbol() + ":" + coinGeckoService.getPrice(coin.getSymbol()));
         });
         log.info("Scheduled price refresh completed");
     }
