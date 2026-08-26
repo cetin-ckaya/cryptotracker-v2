@@ -4,6 +4,15 @@ services:
     ports:
       - "6379:6379"
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"       # uygulama bağlantısı
+      - "15672:15672"     # web yönetim paneli
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -30,3 +39,4 @@ services:
     
 volumes:
   postgres_data:
+

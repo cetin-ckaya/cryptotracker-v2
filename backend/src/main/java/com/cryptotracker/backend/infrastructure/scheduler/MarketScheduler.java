@@ -2,19 +2,20 @@ package com.cryptotracker.backend.infrastructure.scheduler;
 
 import com.cryptotracker.backend.domain.model.PortfolioValueHistory;
 import com.cryptotracker.backend.infrastructure.external.CoinGeckoService;
+import com.cryptotracker.backend.infrastructure.messaging.PriceUpdateMessage;
+import com.cryptotracker.backend.infrastructure.messaging.RabbitMQConfig;
 import com.cryptotracker.backend.infrastructure.persistence.CoinRepository;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioRepository;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioValueHistoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-// @Component: Spring bu sinifi otomatik algilayip bean olarak kaydeder
 @Component
 public class MarketScheduler {
     private static final Logger log = LoggerFactory.getLogger(MarketScheduler.class);
@@ -23,14 +24,16 @@ public class MarketScheduler {
     private final CoinRepository coinRepository;
     private final PortfolioRepository portfolioRepository;
     private final PortfolioValueHistoryRepository portfolioValueHistoryRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+    // WebSocket'e direkt yazmak yerine RabbitMQ'ya gonderiyoruz
+    // Consumer (PriceMessageConsumer) kuyruktaki mesaji alip WebSocket'e iletecek
+    private final RabbitTemplate rabbitTemplate;
 
-    public MarketScheduler(CoinGeckoService coinGeckoService, CoinRepository coinRepository, PortfolioRepository portfolioRepository, PortfolioValueHistoryRepository portfolioValueHistoryRepository, SimpMessagingTemplate messagingTemplate) {
+    public MarketScheduler(CoinGeckoService coinGeckoService, CoinRepository coinRepository, PortfolioRepository portfolioRepository, PortfolioValueHistoryRepository portfolioValueHistoryRepository, RabbitTemplate rabbitTemplate) {
         this.coinGeckoService = coinGeckoService;
         this.coinRepository = coinRepository;
         this.portfolioRepository = portfolioRepository;
         this.portfolioValueHistoryRepository = portfolioValueHistoryRepository;
-        this.messagingTemplate = messagingTemplate;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     // Her 5 dakikada bir calisir — Redis cache'i temizleyip tum coinlerin fiyatini yeniden ceker
@@ -49,8 +52,9 @@ public class MarketScheduler {
             coinGeckoService.getPrice(coin.getSymbol());
             log.info("Price refreshed for: {}", coin.getSymbol());
 
-            messagingTemplate.convertAndSend("/topic/prices",
-                    coin.getSymbol() + ":" + coinGeckoService.getPrice(coin.getSymbol()));
+            // Fiyati kuyruğa gonder — Consumer WebSocket'e iletecek
+            rabbitTemplate.convertAndSend(RabbitMQConfig.PRICE_QUEUE,
+                    new PriceUpdateMessage(coin.getSymbol(), coinGeckoService.getPrice(coin.getSymbol())));
         });
         log.info("Scheduled price refresh completed");
     }
