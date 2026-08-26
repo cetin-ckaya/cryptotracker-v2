@@ -206,20 +206,46 @@ backend/src/main/java/com/cryptotracker/backend/
 - `TransactionController`: POST/GET `/api/v1/transactions`
 - Tüm endpoint'ler Postman'de test edildi
 
+### Sprint 4 — Cache, Zamanlama & Real-Time (Gün 34-42) ✅
+
+- Redis Cache: `@Cacheable` CoinGecko fiyatlari, `@CacheEvict`, Docker Redis
+- `MarketScheduler`: 5 dk'da bir fiyat guncelleme, saatlik portfoy gecmisi kaydi
+- `WebSocketConfig`: STOMP, `/topic/prices` kanali
+- `SimpleClientHttpRequestFactory`: Windows loopback sorunu icin gerekli — `CoinGeckoService` ve `AiAnalysisService`'te kullanilir
+
+### Sprint 5 — Swagger & Actuator (Gün 45-47) ✅
+
+- `springdoc-openapi-starter-webmvc-ui` bagimliligı eklendi
+- Actuator `/health` ve `/metrics` endpoint'leri acildi
+- SecurityConfig'e `/swagger-ui/**`, `/v3/api-docs/**`, `/actuator/**` permit eklendi
+
+### Sprint 6 — Tests & Docker (Gün 48-55) ✅
+
+- `PortfolioServiceTest`: JUnit 5 + Mockito unit testleri
+- `mock-maker-subclass`: Java 21 Mockito uyumlulugu icin `src/test/resources/mockito-extensions/` altinda
+- Multi-stage `Dockerfile` (eclipse-temurin:21-jdk builder → 21-jre runtime)
+- `docker-compose.yml`: app / postgres:16-alpine / redis:7-alpine servisleri
+
+### Sprint 7 — Premium & AI (Gün 56-63) ✅
+
+- `JwtTokenProvider`: `generateToken(email, role)` — token'a role claim eklendi
+- `JwtAuthenticationFilter`: role'dan `SimpleGrantedAuthority` — null guard ile (eski token uyumluluğu)
+- `SecurityConfig`: `@EnableMethodSecurity` eklendi
+- `UserService`: login'de `subscription.tier` okunarak token'a `ROLE_FREE` / `ROLE_PREMIUM` yazılıyor
+- `SubscriptionService` + `SubscriptionController`: GET `/api/v1/subscription`, POST `/api/v1/subscription/upgrade`
+- `AiAnalysisService`: Groq API (`openai/gpt-oss-20b`) ile portfoy analizi, `@Value("${groq.api.key}")`
+- `AiController`: `@PreAuthorize("hasRole('PREMIUM')")` ile korunan GET `/api/v1/ai/analyze`
+- `OpenApiConfig`: Swagger UI'da JWT Authorize butonu icin `@SecurityScheme` + `SecurityRequirement`
+- `application-local.properties`: Groq API key burada saklanir (gitignore'da) — calistirmak icin `./mvnw spring-boot:run -Dspring-boot.run.profiles=local`
+
 ---
 
 ## Sıradaki Sprint
 
-**Sprint 4 — Cache, Zamanlama & Real-Time (Gün 34-42)**
+**Sprint 8 — Kullanici Davranis Takibi (Gün 67-69)**
 
-- **Gün 34-36:** Redis Cache — Docker'da Redis, `@Cacheable` ile CoinGecko fiyat önbellekleme,
-  fiyat değiştiğinde `@CacheEvict`
-- **Gün 37-39:** Scheduled Tasks — `@EnableScheduling`, `MarketScheduler` (5 dk'da bir fiyat güncelle),
-  saatlik portföy geçmişi kaydı
-- **Gün 40-42:** WebSocket & Real-Time — `WebSocketConfig`, `/topic/prices` kanalı, Postman WS testi
-
-> Not: Plan'daki Gün 43-44 Alarm Sistemi adımı D002 kararı gereği atlanacak.
-> Gün 45-47 Swagger + Actuator ile devam edilecek.
+- Gün 64-66: Raporlama Sistemi — D008 karari geregi ASKIYA ALINDI
+- Gün 67-69: `@TrackerBehavior` AOP anotasyonu, `user_behavior_events` tablosuna kayit
 
 ---
 
@@ -234,6 +260,7 @@ backend/src/main/java/com/cryptotracker/backend/
 | D005 | Rate limiting yok — premium gating sadece AI Analiz sayfasına erişim üzerinden |
 | D006 | Build tool: Maven |
 | D007 | Monorepo — backend/, frontend/ aynı repoda |
+| D008 | Raporlama sistemi (PDF) askıya alındı — proje bitince değerlendirilecek |
 
 ---
 

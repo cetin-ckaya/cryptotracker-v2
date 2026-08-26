@@ -31,10 +31,47 @@ Bu dosya, aktif olarak neredeyiz sorusuna hızlı cevap vermek için oturum sonl
 - [x] Gün 60-63: Groq AI entegrasyonu — AiAnalysisService (openai/gpt-oss-20b), AiController (@PreAuthorize PREMIUM), OpenApiConfig (Swagger JWT Authorize butonu) — Swagger'da 200 OK test edildi
 
 ### Sıradaki adım
-Sprint 8: React Frontend (Phase 3 başlangıcı)
+Sprint 8 — Raporlama & Davranis Takibi (Gun 64-69)
+- [ ] Gun 64-66: Raporlama Sistemi — D008 karari geregi ASKIYA ALINDI
+- [ ] Gun 67-69: Kullanici Davranis Takibi — @TrackerBehavior AOP, user_behavior_events tablosu
+
+### Gelecek Sprint'ler (Plan Ozeti)
+
+**Sprint 9 — Event-Driven & Guvenlik (Gun 70-76)**
+- Gun 70-73: RabbitMQ entegrasyonu — docker-compose, @RabbitListener
+- Gun 74-76: Gelismis guvenlik — CORS, Security Headers, OWASP Top 10, Dependency Check
+
+**Sprint 10 — Performans & Final (Gun 77-80)**
+- Gun 77-78: Performans — Database indexing, N+1 cozumu, @EntityGraph
+- Gun 79-80: Load Testing, README.md hazirlanmasi
+
+**Phase 3 — React Frontend (Gun 81-100)**
+- Gun 81-83: Vite + React Router kurulumu, Dashboard layout
+- Gun 84-86: Axios + TanStack Query, Login/Register, JWT yonetimi
+- Gun 87-92: Recharts ile grafik dashboard (LineChart, PieChart)
+- Gun 93-95: Portfoy & Islem sayfalari, Modal, DataTable
+- Gun 96-97: WebSocket + STOMP.js real-time UI
+- Gun 98-100: AI Analiz sayfasi, react-markdown, Vercel/Netlify deploy
+
+**Phase 4 — Microservice Donusumu (Gun 101-120)**
+- Gun 101-104: User/Portfolio/Market-Service ayrisimi (DDD)
+- Gun 105-107: Spring Cloud Gateway, JWT dogrulama gateway'e tasima
+- Gun 108-110: Eureka Server, Config Server
+- Gun 111-113: OpenFeign, RabbitMQ inter-service iletisim
+- Gun 114-117: Micrometer, Zipkin, Prometheus, Grafana
+- Gun 118-120: GitHub Actions CI/CD, docker-compose guncelleme
+
+**Phase 5 — Kendi ML Modeliniz (Gun 121-150)**
+- Gun 121-124: Python + FastAPI, /predict endpoint, Docker
+- Gun 125-128: Pandas, user_behavior_events veri hazirligi
+- Gun 129-133: scikit-learn Content-Based model, pickle
+- Gun 134-137: FastAPI Serving, model.pkl deploy
+- Gun 138-142: Java WebClient → FastAPI entegrasyonu, Groq fallback
+- Gun 143-150: End-to-End test, demo senaryosu, CV/Portfolio sunum dosyasi
 
 ## Kapsam Notları (docs/decisions.md ile senkron)
 - Tek portföy modeli (D001) — DB seviyesinde `Portfolio.user_id UNIQUE` ile zaten uygulanmış.
 - Alarm sistemi kapsam dışı (D002).
 - AI freemium ayrımı (D003) — FREE sabit izleme listesi 3 coin (BTC/ETH/SOL) olarak teyit edildi (2026-08-20).
 - Rate limiting kapsam dışı (D005).
+- Raporlama sistemi askiya alindi (D008) — proje bitince degerlendirilecek.

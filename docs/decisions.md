@@ -64,6 +64,13 @@ kaynak bulmayı kolaylaştırıyor.
 
 ---
 
+## D008 - Raporlama Sistemi Askıya Alındı
+**Tarih:** 2026-08-26
+**Karar:** Plan'daki Gün 64-66 PDF Raporlama Sistemi (iText/PDFBox/Apache POI) özelliği askıya alındı.
+**Gerekçe:** Proje tamamlandıktan sonra değerlendirilecek. Çekirdek değer önerisine (portföy takibi + AI analiz + microservice dönüşümü) doğrudan katkısı düşük, ekstra kütüphane bağımlılığı getiriyor.
+
+---
+
 ## D007 - Proje Yapısı: Monorepo
 **Tarih:** Proje kurulumu
 **Karar:** Backend, frontend ve ileride microservice'ler tek bir GitHub
