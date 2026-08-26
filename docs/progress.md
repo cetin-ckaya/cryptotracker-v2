@@ -6,8 +6,8 @@ Bu dosya, aktif olarak neredeyiz sorusuna hızlı cevap vermek için oturum sonl
 ## Durum Özeti (2026-08-26)
 
 **Faz:** Phase 1 — Monolitik Backend Geliştirme
-**Sprint:** Sprint 7 — Premium & OpenAI (Gün 56-63) ✅ TAMAMLANDI
-**Şu an:** Sprint 8 başlangıcı
+**Sprint:** Sprint 9 — Event-Driven & Guvenlik (Gun 70-76) ✅ TAMAMLANDI
+**Şu an:** Sprint 10 başlangıcı
 
 ### Tamamlanan
 - [x] Gün 1-3 (Phase 0): requirements.md, decisions.md, ER diyagramı, repo + ilk commit
@@ -30,10 +30,13 @@ Bu dosya, aktif olarak neredeyiz sorusuna hızlı cevap vermek için oturum sonl
 - [x] Gün 56-59: Subscription sistemi — SubscriptionService, SubscriptionController, JWT role claim, @EnableMethodSecurity
 - [x] Gün 60-63: Groq AI entegrasyonu — AiAnalysisService (openai/gpt-oss-20b), AiController (@PreAuthorize PREMIUM), OpenApiConfig (Swagger JWT Authorize butonu) — Swagger'da 200 OK test edildi
 
+- [x] Gun 64-66: Raporlama Sistemi — D008 karari geregi ASKIYA ALINDI
+- [x] Gun 67-69: Kullanici Davranis Takibi — BehaviorTrackingService (direkt servis cagrisi, AOP yerine), user_behavior_events tablosu, PostgreSQL'de dogrulandi
+- [x] Gun 70-73: RabbitMQ entegrasyonu — docker-compose rabbitmq servisi, RabbitMQConfig, PriceUpdateMessage, PriceMessageConsumer, MarketScheduler RabbitTemplate ile guncellendi
+- [x] Gun 74-76: Guvenlik — CORS (localhost:3000), Security Headers (X-Frame-Options, X-Content-Type-Options, HSTS), SecurityConfig duzeltildi
+
 ### Sıradaki adım
-Sprint 8 — Raporlama & Davranis Takibi (Gun 64-69)
-- [ ] Gun 64-66: Raporlama Sistemi — D008 karari geregi ASKIYA ALINDI
-- [ ] Gun 67-69: Kullanici Davranis Takibi — @TrackerBehavior AOP, user_behavior_events tablosu
+Sprint 10 — Performans & Final (Gun 77-80)
 
 ### Gelecek Sprint'ler (Plan Ozeti)
 
