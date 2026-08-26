@@ -5,6 +5,7 @@ import com.cryptotracker.backend.application.dto.request.AddHoldingRequest;
 import com.cryptotracker.backend.application.dto.response.HoldingResponse;
 import com.cryptotracker.backend.application.dto.response.PortfolioResponse;
 import com.cryptotracker.backend.application.exception.NotFoundException;
+import com.cryptotracker.backend.application.service.BehaviorTrackingService;
 import com.cryptotracker.backend.application.service.PortfolioService;
 import com.cryptotracker.backend.infrastructure.persistence.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,12 @@ import org.springframework.web.bind.annotation.*;
 public class PortfolioController {
     private final PortfolioService portfolioService;
     private final UserRepository userRepository;
+    private final BehaviorTrackingService behaviorTrackingService;
 
-    public PortfolioController(PortfolioService portfolioService, UserRepository userRepository) {
+    public PortfolioController(PortfolioService portfolioService, UserRepository userRepository, BehaviorTrackingService behaviorTrackingService) {
         this.portfolioService = portfolioService;
         this.userRepository = userRepository;
+        this.behaviorTrackingService = behaviorTrackingService;
     }
 
     // JWT filter email'i SecurityContext'e koymuştu — buradan okuyoruz
@@ -31,9 +34,12 @@ public class PortfolioController {
                 .getId();
     }
 
+
     @GetMapping
     public ResponseEntity<PortfolioResponse> getPortfolio(){
-        return ResponseEntity.ok(portfolioService.getPortfolio(1L));
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        behaviorTrackingService.track(email, "GET_PORTFOLIO");
+        return ResponseEntity.ok(portfolioService.getPortfolio(getAuthenticatedUserId()));
     }
 
     @PostMapping("/holdings")

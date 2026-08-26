@@ -21,6 +21,6 @@ public class UserBehaviorEvent extends BaseEntity{
     // Event'ten event'e farklı alanlar içerebileceği için
     // sabit kolonlar yerine JSON string olarak tutuyoruz.
 
-    @Column(name = "metadata",columnDefinition = "jsonb")
+    @Column(name = "metadata", columnDefinition = "text")
     private String metadata;
 }
