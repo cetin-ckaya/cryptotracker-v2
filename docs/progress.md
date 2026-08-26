@@ -3,11 +3,11 @@
 Roadmap kaynağı: `AI Destekli_plan1.pdf` (~150 günlük plan), kapsam sapmaları için bkz. `decisions.md`.
 Bu dosya, aktif olarak neredeyiz sorusuna hızlı cevap vermek için oturum sonlarında güncellenir.
 
-## Durum Özeti (2026-08-25)
+## Durum Özeti (2026-08-26)
 
 **Faz:** Phase 1 — Monolitik Backend Geliştirme
-**Sprint:** Sprint 5 — Swagger & Actuator (Gün 45-47)
-**Şu an:** Gün 45 başlangıcı
+**Sprint:** Sprint 7 — Premium & OpenAI (Gün 56-63) ✅ TAMAMLANDI
+**Şu an:** Sprint 8 başlangıcı
 
 ### Tamamlanan
 - [x] Gün 1-3 (Phase 0): requirements.md, decisions.md, ER diyagramı, repo + ilk commit
@@ -25,12 +25,13 @@ Bu dosya, aktif olarak neredeyiz sorusuna hızlı cevap vermek için oturum sonl
 - [x] Gün 37-39: Scheduled Tasks — @EnableScheduling, MarketScheduler (5 dk fiyat), saatlik portfoy gecmisi
 - [x] Gün 40-42: WebSocket & Real-Time — WebSocketConfig, /topic/prices kanali, SecurityConfig /ws/** acildi
 - [ ] Gün 43-44: Alarm Sistemi — D002 karari geregi ATLANDI
+- [x] Gün 45-47: Swagger UI (springdoc-openapi) + Actuator /health /metrics — Swagger'da test edildi
+- [x] Gün 48-55: Docker multi-stage Dockerfile + docker-compose (app/postgres/redis) — build ve calistirma testi gecti
+- [x] Gün 56-59: Subscription sistemi — SubscriptionService, SubscriptionController, JWT role claim, @EnableMethodSecurity
+- [x] Gün 60-63: Groq AI entegrasyonu — AiAnalysisService (openai/gpt-oss-20b), AiController (@PreAuthorize PREMIUM), OpenApiConfig (Swagger JWT Authorize butonu) — Swagger'da 200 OK test edildi
 
 ### Sıradaki adım
-Sprint 5: Swagger + Actuator (Gun 45-47)
-- springdoc-openapi-starter-webmvc-ui bagimliligini ekle
-- Controller'lara @Operation anotasyonlari ekle
-- application.properties'e Actuator /health ve /metrics uclarini ac
+Sprint 8: React Frontend (Phase 3 başlangıcı)
 
 ## Kapsam Notları (docs/decisions.md ile senkron)
 - Tek portföy modeli (D001) — DB seviyesinde `Portfolio.user_id UNIQUE` ile zaten uygulanmış.
