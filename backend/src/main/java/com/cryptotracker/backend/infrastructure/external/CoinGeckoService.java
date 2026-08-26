@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
@@ -16,8 +17,12 @@ public class CoinGeckoService {
 
     private static final Logger log = LoggerFactory.getLogger(CoinGeckoService.class);
 
+    // SimpleClientHttpRequestFactory: Java'nin eski HttpURLConnection'ini kullanir
+    // Spring Boot 4.x'te yeni HttpClient Windows'ta loopback baglantisindan hata verir
     public CoinGeckoService() {
-        this.restClient = RestClient.create();
+        this.restClient = RestClient.builder()
+                .requestFactory(new SimpleClientHttpRequestFactory())
+                .build();
     }
 
     // CoinGecko'da her coin'in kendine özgü bir "id"si var.

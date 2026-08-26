@@ -8,6 +8,7 @@ import com.cryptotracker.backend.application.dto.response.UserResponse;
 import com.cryptotracker.backend.application.exception.BusinessException;
 import com.cryptotracker.backend.application.exception.NotFoundException;
 import com.cryptotracker.backend.domain.model.Portfolio;
+import com.cryptotracker.backend.domain.model.Subscription;
 import com.cryptotracker.backend.domain.model.User;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioRepository;
 import com.cryptotracker.backend.infrastructure.persistence.UserRepository;
@@ -24,14 +25,16 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserMapper userMapper;
+    private final SubscriptionService subscriptionService;
 
 
-    public UserService(UserRepository userRepository, PortfolioRepository portfolioRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, PortfolioRepository portfolioRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, UserMapper userMapper, SubscriptionService subscriptionService) {
         this.userRepository = userRepository;
         this.portfolioRepository = portfolioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userMapper = userMapper;
+        this.subscriptionService = subscriptionService;
     }
 
     public UserResponse register(CreateUserRequest request) {
@@ -64,8 +67,9 @@ public class UserService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new NotFoundException("Invalid credentials");
         }
-
-        String token = jwtTokenProvider.generateToken(user.getEmail());
+        Subscription subscription = subscriptionService.getOrCreateSubscription(user.getId());
+        String role = "ROLE_" + subscription.getTier().name();
+        String token = jwtTokenProvider.generateToken(user.getEmail(), role);
         return new AuthResponse(token);
     }
 

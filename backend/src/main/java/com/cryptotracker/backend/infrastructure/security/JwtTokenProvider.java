@@ -26,9 +26,10 @@ public class JwtTokenProvider {
     }
 
     // Login başarılı olduğunda çağrılır — kullanıcının email'ini token içine gömer.
-    public String generateToken(String email) {
+    public String generateToken(String email,String role) {
         return Jwts.builder()
                 .subject(email)                             // token'ın kime ait olduğu
+                .claim("role", role)
                 .issuedAt(new Date())                       // oluşturulma zamanı
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))  // geçerlilik sonu
                 .signWith(getSigningKey())                  // imzala
@@ -38,6 +39,10 @@ public class JwtTokenProvider {
     // Her istekte token'dan email'i çıkarmak için kullanılır.
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return parseClaims(token).get("role", String.class);
     }
 
     // Token'ın süresi dolmuş mu veya bozulmuş mu kontrol eder.

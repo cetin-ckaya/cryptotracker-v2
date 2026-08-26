@@ -8,4 +8,5 @@ import java.util.List;
 public interface CoinRepository extends JpaRepository<Coin,Long> {
     //FREE kullanıcıya gösterilecek sabit coin listesi
     List<Coin> findByIsFreeTierWatchlistTrue();
+
 }

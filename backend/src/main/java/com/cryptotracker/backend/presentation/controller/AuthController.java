@@ -1,6 +1,8 @@
 package com.cryptotracker.backend.presentation.controller;
 
 import com.cryptotracker.backend.application.dto.request.CreateUserRequest;
+import com.cryptotracker.backend.application.dto.request.LoginRequest;
+import com.cryptotracker.backend.application.dto.response.AuthResponse;
 import com.cryptotracker.backend.application.dto.response.UserResponse;
 import com.cryptotracker.backend.application.service.UserService;
 import jakarta.validation.Valid;
@@ -27,5 +29,11 @@ public class AuthController {
         UserResponse response = userService.register(request);
         // 201 Created: yeni kaynak oluşturuldu — POST'un standart başarı kodu budur.
         return ResponseEntity.status(201).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
+        AuthResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
