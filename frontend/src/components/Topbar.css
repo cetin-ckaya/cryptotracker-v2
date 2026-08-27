@@ -1,0 +1,137 @@
+.topbar {
+  height: 62px;
+  background: #0f1220;
+  border-bottom: 1px solid #1d2233;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.topbar-prices {
+  display: flex;
+  align-items: center;
+}
+
+.price-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  border-right: 1px solid #1e2235;
+}
+
+.price-chip:first-child {
+  padding-left: 0;
+}
+
+.price-chip:last-child {
+  border-right: none;
+}
+
+.price-coin-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.price-symbol {
+  font-size: 11px;
+  color: #6b7394;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.price-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e2e8f0;
+  letter-spacing: 0;
+}
+
+.price-change {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.price-change.pos  { color: #34d399; }
+.price-change.neg  { color: #f87171; }
+.price-change.wait { color: #626d88; font-size: 11px; }
+
+/* User section */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.topbar-bell {
+  position: relative;
+  color: #6b7394;
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 16px;
+  height: 16px;
+  background: #ff4757;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1e2235;
+  border: 1px solid #2a2f4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.user-tier {
+  font-size: 11px;
+  color: #a394ff;
+  font-weight: 400;
+}

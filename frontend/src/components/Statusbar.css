@@ -1,0 +1,38 @@
+.statusbar {
+  height: 36px;
+  background: #0f1220;
+  border-top: 1px solid #1d2233;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0 24px;
+  font-size: 11.5px;
+  color: #8b95b0;
+  flex-shrink: 0;
+}
+
+.sb-label {
+  color: #626d88;
+  margin-right: 4px;
+}
+
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sb-right { margin-left: auto; }
+
+.sb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.sb-dot.green {
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+}
+
+.sb-ok { color: #34d399; }
