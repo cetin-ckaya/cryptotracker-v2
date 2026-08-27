@@ -24,6 +24,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Frontend ve Postman buraya baglanir: ws://localhost:8081/ws
         // SockJS: WebSocket desteklemeyen tarayicilar icin HTTP fallback saglar
-        registry.addEndpoint("/ws").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("http://localhost:5173", "http://localhost:3000")
+                .withSockJS();
     }
 }
