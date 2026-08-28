@@ -125,6 +125,14 @@ export default function Dashboard() {
   const up = pnl >= 0
   const assetCount = holdings.length
 
+  // Gunluk kar/zarar: 24 saat onceki portfolio_value_history snapshot'ina gore.
+  // Backend bu alanlari doldurana kadar null kalir — kart "—" gosterir.
+  const daily = portfolio?.dailyProfitLoss != null ? Number(portfolio.dailyProfitLoss) : null
+  const dailyPct = portfolio?.dailyProfitLossPercentage != null
+    ? Number(portfolio.dailyProfitLossPercentage)
+    : null
+  const dailyUp = (daily ?? 0) >= 0
+
   // Coin bazli maliyet = miktar x ortalama alis fiyati (API'den gelen gercek alanlar)
   const rows = holdings.map((h, i) => {
     const cost = num(h.quantity) * num(h.averageBuyPrice)
@@ -216,19 +224,23 @@ export default function Dashboard() {
         <div className="card stat">
           <div className="stat-top">
             <span className="stat-label">Günlük Kar/Zarar</span>
-            <div className={`stat-ico ${up ? 'blue' : 'red'}`}>
-              {up ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+            <div className={`stat-ico ${dailyUp ? 'blue' : 'red'}`}>
+              {dailyUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
             </div>
           </div>
-          <div className={`stat-value ${loading ? '' : up ? 'green' : 'red'}`}>
-            {loading ? '—' : (up ? '+ ' : '- ') + tl(Math.abs(pnl))}
+          <div className={`stat-value ${daily == null ? '' : dailyUp ? 'green' : 'red'}`}>
+            {loading || daily == null ? '—' : (dailyUp ? '+ ' : '- ') + tl(Math.abs(daily))}
           </div>
-          {!loading && <div className={`stat-sub ${up ? 'green' : 'red'}`}>{pctStr(pnlPct)}</div>}
-          {totalValue > 0 && (
+          {!loading && (
+            daily == null
+              ? <div className="stat-sub">Son 24 saatlik kayıt bekleniyor</div>
+              : <div className={`stat-sub ${dailyUp ? 'green' : 'red'}`}>{pctStr(dailyPct)}</div>
+          )}
+          {daily != null && (
             <div className="stat-spark">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barSeed.map((v, i) => ({ i, v }))}>
-                  <Bar dataKey="v" fill={up ? '#4a8ef0' : '#f87171'} fillOpacity={0.75} radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="v" fill={dailyUp ? '#4a8ef0' : '#f87171'} fillOpacity={0.75} radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

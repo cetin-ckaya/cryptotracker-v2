@@ -7,6 +7,7 @@ import Transactions from './pages/Transactions'
 import Markets from './pages/Markets'
 import AiAnalysis from './pages/AiAnalysis'
 import Login from './pages/Login'
+import Register from './pages/Register'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 const queryClient = new QueryClient()
@@ -23,6 +24,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="portfolio" element={<Portfolio />} />
