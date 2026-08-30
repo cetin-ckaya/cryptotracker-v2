@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useLivePrices, { changePct } from '../hooks/useLivePrices'
+import { money } from '../utils/format'
 import api from '../api/axios'
 import './Auth.css'
 
 // Sol paneldeki canli fiyat seritleri — /topic/prices kanalindan beslenir.
 // /ws endpoint'i SecurityConfig'de permitAll oldugu icin giris yapmadan da calisir.
 const TICKERS = ['BTC', 'ETH', 'SOL']
-
-const fmt = n => Number(n).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -67,7 +66,7 @@ export default function Login() {
             return (
               <div className="ticker" key={sym}>
                 <span className="tk-name">{sym}/USDT</span>
-                <span className="tk-val">{entry ? `₺ ${fmt(entry.price)}` : '—'}</span>
+                <span className="tk-val">{entry ? money(entry.price) : '—'}</span>
                 <span className={`tk-chg ${pct == null ? '' : pct >= 0 ? 'up' : 'down'}`}>
                   {pct == null ? (entry ? 'güncel' : 'bekleniyor') : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
                 </span>
