@@ -27,11 +27,20 @@ public class CoinGeckoService {
 
     // CoinGecko'da her coin'in kendine özgü bir "id"si var.
     // BTC → "bitcoin", ETH → "ethereum", SOL → "solana"
+    // DIKKAT: Sembol ile id her zaman ayni degil — BNB'nin id'si "binancecoin".
+    // Buraya eklenmeyen bir sembol default dalina duser, CoinGecko o id'yi
+    // bulamaz ve getPrice() sessizce BigDecimal.ZERO doner.
     private String toCoinGeckoId(String symbol){
         return switch (symbol.toUpperCase()){
             case "BTC" -> "bitcoin";
             case "ETH" -> "ethereum";
             case "SOL" -> "solana";
+            case "BNB" -> "binancecoin";
+            case "USDT" -> "tether";
+            case "ADA" -> "cardano";
+            case "XRP" -> "ripple";
+            case "AVAX" -> "avalanche-2";
+            case "DOT" -> "polkadot";
             default -> symbol.toLowerCase();
         };
     }
