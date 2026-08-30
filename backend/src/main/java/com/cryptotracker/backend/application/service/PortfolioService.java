@@ -8,15 +8,19 @@ import com.cryptotracker.backend.application.exception.NotFoundException;
 import com.cryptotracker.backend.domain.model.Coin;
 import com.cryptotracker.backend.domain.model.Holding;
 import com.cryptotracker.backend.domain.model.Portfolio;
+import com.cryptotracker.backend.domain.model.PortfolioValueHistory;
 import com.cryptotracker.backend.infrastructure.external.CoinGeckoService;
 import com.cryptotracker.backend.infrastructure.persistence.CoinRepository;
 import com.cryptotracker.backend.infrastructure.persistence.HoldingRepository;
 import com.cryptotracker.backend.infrastructure.persistence.PortfolioRepository;
+import com.cryptotracker.backend.infrastructure.persistence.PortfolioValueHistoryRepository;
 import com.cryptotracker.backend.infrastructure.persistence.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class PortfolioService {
@@ -27,14 +31,18 @@ public class PortfolioService {
     private final UserRepository userRepository;
     private final PortfolioMapper portfolioMapper;
     private final CoinGeckoService coinGeckoService;
+    // Gunluk kar/zarar icin 24 saat onceki portfoy degeri buradan okunur.
+    // Tabloyu MarketScheduler.savePortfolioHistory() saat basi dolduruyor.
+    private final PortfolioValueHistoryRepository portfolioValueHistoryRepository;
 
-    public PortfolioService(PortfolioRepository portfolioRepository, HoldingRepository holdingRepository, CoinRepository coinRepository, UserRepository userRepository, PortfolioMapper portfolioMapper, CoinGeckoService coinGeckoService) {
+    public PortfolioService(PortfolioRepository portfolioRepository, HoldingRepository holdingRepository, CoinRepository coinRepository, UserRepository userRepository, PortfolioMapper portfolioMapper, CoinGeckoService coinGeckoService, PortfolioValueHistoryRepository portfolioValueHistoryRepository) {
         this.portfolioRepository = portfolioRepository;
         this.holdingRepository = holdingRepository;
         this.coinRepository = coinRepository;
         this.userRepository = userRepository;
         this.portfolioMapper = portfolioMapper;
         this.coinGeckoService = coinGeckoService;
+        this.portfolioValueHistoryRepository = portfolioValueHistoryRepository;
     }
 
 
@@ -69,7 +77,51 @@ public class PortfolioService {
         response.setTotalProfitLoss(profitLoss);
         response.setTotalProfitLossPercentage(profitLossPercentage);
 
+        // --- Gunluk kar/zarar ---
+        // totalProfitLoss "aldigindan bu yana" kumulatif kar/zarar.
+        // Gunluk olan ise: simdiki deger - 24 saat onceki deger.
+        applyDailyChange(response, portfolio.getId(), totalValue);
+
         return response;
+    }
+
+    // 24 saat onceki snapshot'a gore gunluk degisimi hesaplar ve response'a yazar.
+    //
+    // Tam 24 saat once kaydedilmis bir satir olmayabilir (scheduler saat basi calisiyor,
+    // uygulama kapaliyken hic calismiyor). Bu yuzden "24 saat oncesinden daha eski
+    // kayitlar icinde en yenisi" aliniyor — yani mevcut en yakin snapshot.
+    //
+    // Hic snapshot yoksa alanlar null birakilir; frontend bunu "Son 24 saatlik kayit
+    // bekleniyor" olarak gosterir. Sifir yazmak yaniltici olurdu: "degisim yok" ile
+    // "veri yok" ayni sey degil.
+    private void applyDailyChange(PortfolioResponse response, Long portfolioId, BigDecimal totalValue) {
+        LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
+
+        Optional<PortfolioValueHistory> snapshot = portfolioValueHistoryRepository
+                .findFirstByPortfolioIdAndRecordedAtBeforeOrderByRecordedAtDesc(portfolioId, twentyFourHoursAgo);
+
+        if (snapshot.isEmpty()) {
+            return; // dailyProfitLoss ve dailyProfitLossPercentage null kalir
+        }
+
+        BigDecimal previousValue = snapshot.get().getTotalValue();
+        BigDecimal dailyProfitLoss = totalValue.subtract(previousValue);
+        response.setDailyProfitLoss(dailyProfitLoss);
+
+        // Sifira bolme korumasi: eski deger 0 ise yuzde tanimsizdir, null birak.
+        // BigDecimal'da == veya equals yerine compareTo kullanilir; equals scale'i de
+        // karsilastirir (0 ile 0.00 esit sayilmaz), compareTo sadece degere bakar.
+        if (previousValue.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+
+        // BigDecimal'da divide() olcek + yuvarlama verilmezse bolum sonsuz basamakli
+        // ciktiginda ArithmeticException firlatir — bu yuzden 4 basamak + HALF_UP.
+        BigDecimal dailyPercentage = dailyProfitLoss
+                .divide(previousValue, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+
+        response.setDailyProfitLossPercentage(dailyPercentage);
     }
 
     public HoldingResponse addHolding(Long userId, AddHoldingRequest request){

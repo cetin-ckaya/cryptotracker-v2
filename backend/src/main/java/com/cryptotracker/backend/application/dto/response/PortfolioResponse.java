@@ -29,6 +29,10 @@ public class PortfolioResponse {
     // totalValue - totalInvested = kar ise pozitif, zarar ise negatif.
     private BigDecimal totalProfitLoss;
 
+    private BigDecimal dailyProfitLoss;
+
+    private BigDecimal dailyProfitLossPercentage;
+
     // Yüzde olarak kar/zarar: (totalProfitLoss / totalInvested) * 100
     private BigDecimal totalProfitLossPercentage;
 }
